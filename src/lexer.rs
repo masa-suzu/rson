@@ -21,7 +21,7 @@ impl<'a> Lexer<'a> {
         return lexer;
     }
 
-    pub fn next_token(&mut self) -> Token {
+    fn next_token(&mut self) -> Token {
         self.skip_whitespace();
 
         let token = match self.ch {
@@ -130,6 +130,17 @@ impl<'a> Lexer<'a> {
         println!("^ <- self.ch = {}", self.ch);
     }
 }
+
+impl<'a> Iterator for Lexer<'a> {
+    type Item = Token;
+    fn next(&mut self) -> Option<Token> {
+        match self.next_token() {
+            Token::Eof => None,
+            x => Some(x),
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
 
@@ -145,7 +156,7 @@ mod tests {
     "array" : [ 1, 2, 3],
 }
 "##;
-        let tests = vec![
+        let want = vec![
             Token::LeftBrace,
             Token::String("number".to_string()),
             Token::Colon,
@@ -166,44 +177,30 @@ mod tests {
             Token::RightBracket,
             Token::Comma,
             Token::RightBrace,
-            Token::Eof,
         ];
 
-        let mut lexer = Lexer::new(input);
-
-        for want in tests {
-            let got = lexer.next_token();
-            assert_eq!(want, got);
-        }
+        let got: Vec<Token> = Lexer::new(input).map(|x| x).collect();
+        assert_eq!(want, got);
     }
 
     #[test]
     fn next_token_with_illegal() {
         let input = "123 x 123";
-        let tests = vec![
+        let want = vec![
             Token::Number(123.0),
             Token::Illegal(4),
             Token::Number(123.0),
-            Token::Eof,
         ];
 
-        let mut lexer = Lexer::new(input);
-
-        for want in tests {
-            let got = lexer.next_token();
-            assert_eq!(want, got);
-        }
+        let got: Vec<Token> = Lexer::new(input).map(|x| x).collect();
+        assert_eq!(want, got);
     }
     #[test]
     fn next_token_string_not_terminated() {
         let input = "1\"xxx";
-        let tests = vec![Token::Number(1.0), Token::Illegal(4), Token::Eof];
+        let want = vec![Token::Number(1.0), Token::Illegal(4)];
 
-        let mut lexer = Lexer::new(input);
-
-        for want in tests {
-            let got = lexer.next_token();
-            assert_eq!(want, got);
-        }
+        let got: Vec<Token> = Lexer::new(input).map(|x| x).collect();
+        assert_eq!(want, got);
     }
 }

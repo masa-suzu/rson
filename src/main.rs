@@ -13,15 +13,7 @@ fn main() {
         _ => std::process::exit(1),
     };
 
-    let mut lexer = lexer::Lexer::new(&input);
-
-    loop {
-        match &lexer.next_token() {
-            token::Token::Eof => {
-                println!("{:?}", token::Token::Eof);
-                break;
-            }
-            x => println!("{:?}", x),
-        }
+    for t in lexer::Lexer::new(&input) {
+        println!("{:?}", t);
     }
 }
