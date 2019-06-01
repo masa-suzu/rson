@@ -37,10 +37,7 @@ impl<'a> Lexer<'a> {
             b']' => Token::RightBracket,
 
             0 => Token::Eof,
-            _ => {
-                self.debug();
-                Token::Illegal(self.pos)
-            }
+            _ => self.found_illegal(),
         };
 
         self.read_char();
@@ -68,7 +65,7 @@ impl<'a> Lexer<'a> {
 
         match consumed.parse::<f64>().ok() {
             Some(n) => Token::Number(n),
-            None => Token::Illegal(self.pos),
+            None => self.found_illegal(),
         }
     }
 
@@ -114,7 +111,12 @@ impl<'a> Lexer<'a> {
         }
     }
 
-    fn debug(&mut self) {
+    fn found_illegal(&self) -> Token {
+        self.debug();
+
+        Token::Illegal(self.pos)
+    }
+    fn debug(&self) {
         if !cfg!(debug_assertions) {
             return;
         }
@@ -127,7 +129,7 @@ impl<'a> Lexer<'a> {
         for _ in 0..self.pos {
             print!(" ");
         }
-        println!("^ <- self.ch = {}", self.ch);
+        println!("^ <- illegal = {}", self.ch);
     }
 }
 

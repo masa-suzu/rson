@@ -1,4 +1,6 @@
+pub mod json;
 pub mod lexer;
+pub mod parser;
 pub mod token;
 
 fn try_read_from_stdin<T: std::str::FromStr>() -> Result<T, T::Err> {
@@ -13,7 +15,11 @@ fn main() {
         _ => std::process::exit(1),
     };
 
-    for t in lexer::Lexer::new(&input) {
-        println!("{:?}", t);
+    let mut tokens = lexer::Lexer::new(&input).into_iter();
+    match parser::Parser::new(&mut tokens).parse() {
+        Ok(j) => {
+            println!("{:?}", j);
+        }
+        Err(e) => println!("{}", e),
     }
 }
