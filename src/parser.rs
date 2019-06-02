@@ -88,6 +88,30 @@ impl<'a> Parser<'a> {
         }
     }
 
+    fn parse_array(&mut self) -> Result<Value, Error> {
+        let mut array: Vec<Value> = Vec::new();
+
+        loop {
+            match self.parse_value() {
+                Ok(v) => {
+                    array.push(v);
+                }
+                Err(e) => return Err(e),
+            }
+
+            match self.next_token {
+                Token::RightBracket => {
+                    return Ok(Value::Array(array));
+                }
+                Token::Eof => return Err(Error::FoundUnTerminatedBrace),
+                Token::Comma => {
+                    self.advance_token();
+                }
+                _ => {}
+            }
+        }
+    }
+
     fn parse_key_value_pair(&mut self) -> Result<(String, Value), Error> {
         let k = match self.next_token.to_owned() {
             Token::String(s) => s,
@@ -124,6 +148,10 @@ impl<'a> Parser<'a> {
             Token::True => Value::Boolean(true),
             Token::False => Value::Boolean(false),
             Token::Null => Value::Null,
+            Token::LeftBracket => {
+                self.advance_token();
+                self.parse_array()?
+            }
             _ => {
                 self.advance_token();
                 match self.parse() {
@@ -139,6 +167,8 @@ impl<'a> Parser<'a> {
     }
 
     fn advance_token(&mut self) {
+        self.debug();
+
         self.current_token = self.next_token.clone();
         self.next_token = match self.tokens.next() {
             Some(t) => t,
@@ -285,6 +315,36 @@ mod tests {
             ("x".to_string(), Value::String("y".to_string())),
             ("z".to_string(), Value::String("w".to_string()))
         ];
+        let got = Parser::new(&mut tokens).parse();
+
+        assert_object(want, got)
+    }
+
+    #[test]
+    fn parse_object_array() {
+        let mut tokens = vec![
+            Token::LeftBrace,
+            Token::String("x".to_string()),
+            Token::Colon,
+            Token::LeftBracket,
+            Token::String("y".to_string()),
+            Token::Comma,
+            Token::True,
+            Token::Comma,
+            Token::Null,
+            Token::RightBracket,
+            Token::RightBrace,
+        ]
+        .into_iter();
+
+        let want = hash![(
+            "x".to_string(),
+            Value::Array(vec!(
+                Value::String("y".to_string()),
+                Value::Boolean(true),
+                Value::Null
+            ))
+        )];
         let got = Parser::new(&mut tokens).parse();
 
         assert_object(want, got)

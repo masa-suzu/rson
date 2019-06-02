@@ -5,14 +5,16 @@ use std::fmt::Display;
 use std::fmt::Formatter;
 
 pub type Object = HashMap<String, Value>;
+pub type Array = Vec<Value>;
 
 #[derive(Clone, PartialEq)]
 pub enum Value {
+    Object(Object),
     Boolean(bool),
     Null,
     String(String),
     Number(f64),
-    Object(Object),
+    Array(Array),
 }
 
 impl Display for Value {
@@ -23,6 +25,7 @@ impl Display for Value {
             Value::String(s) => write!(f, "{}", s),
             Value::Number(n) => write!(f, "{}", n),
             Value::Object(o) => write!(f, "{:?}", o),
+            Value::Array(a) => write!(f, "{:?}", a),
         }
     }
 }
@@ -36,6 +39,7 @@ impl fmt::Debug for Value {
             Value::String(s) => write!(f, "String({})", s),
             Value::Number(n) => write!(f, "Number({})", n),
             Value::Object(o) => write!(f, "{:?}", o),
+            Value::Array(a) => write!(f, "{:?}", a),
         }
     }
 }

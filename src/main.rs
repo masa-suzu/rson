@@ -49,26 +49,27 @@ mod tests {
     fn parse_full() {
         let input = r##"
         {
-            "x": {
-                "y":3.14
+            "info": {
+                "version":"0.1.0"
             },
-            "はろー" : "json",
-            "dev" : true,
-            "support_array" : false,
-            "version" : null
+            "はろー" : null,
+            "dev": true,
+            "escape_support" : false
         }
         "##
         .to_string();
 
         let want = hash![
             (
-                "x".to_string(),
-                Value::Object(hash![("y".to_string(), Value::Number(3.14))])
+                "info".to_string(),
+                Value::Object(hash![(
+                    "version".to_string(),
+                    Value::String("0.1.0".to_string())
+                )])
             ),
-            ("はろー".to_string(), Value::String("json".to_string())),
+            ("はろー".to_string(), Value::Null),
             ("dev".to_string(), Value::Boolean(true)),
-            ("support_array".to_string(), Value::Boolean(false)),
-            ("version".to_string(), Value::Null)
+            ("escape_support".to_string(), Value::Boolean(false))
         ];
 
         let mut tokens = Lexer::new(&input).into_iter();
