@@ -52,10 +52,7 @@ impl<'a> Parser<'a> {
         match self.current_token.to_owned() {
             Token::LeftBrace => match self.parse_object() {
                 Ok(v) => match v {
-                    Value::Object(o) => {
-                        Parser::dump(&Value::Object(o.clone()));
-                        Ok(o)
-                    }
+                    Value::Object(o) => Ok(o),
                     _ => panic!("parse_object must return Ok(Value::Object) or Err(Error)"),
                 },
                 Err(e) => return Err(e),
@@ -180,20 +177,9 @@ impl<'a> Parser<'a> {
         if !cfg!(debug_assertions) {
             return;
         }
-        println!("current: {:?}", self.current_token);
-        println!("next   : {:?}", self.next_token);
+        println!("current token : {:?}", self.current_token);
+        println!("next token    : {:?}", self.next_token);
         println!()
-    }
-
-    fn dump(v: &Value) {
-        if !cfg!(debug_assertions) {
-            return;
-        }
-
-        if let Value::Object(_) = v {
-            println!("{:?}", v);
-            println!("{}", v);
-        }
     }
 }
 

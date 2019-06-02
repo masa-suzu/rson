@@ -22,6 +22,8 @@ impl<'a> Lexer<'a> {
     }
 
     fn next_token(&mut self) -> Token {
+        self.debug();
+
         self.skip_whitespace();
 
         let token = match self.ch {
@@ -109,8 +111,6 @@ impl<'a> Lexer<'a> {
             _ => &self.input[start_pos..self.pos],
         };
 
-        self.debug();
-        println!("{}", consumed);
         match &*consumed {
             "true" => Token::True,
             "false" => Token::False,
@@ -157,7 +157,9 @@ impl<'a> Lexer<'a> {
         for _ in 0..self.pos {
             print!(" ");
         }
-        println!("^ <- illegal = {}", self.ch);
+        println!("^ <- current = {}", self.ch);
+
+        println!();
     }
 }
 
