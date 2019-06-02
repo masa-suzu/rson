@@ -121,6 +121,9 @@ impl<'a> Parser<'a> {
         let v = match self.next_token.to_owned() {
             Token::Number(i) => Value::Number(i),
             Token::String(s) => Value::String(s),
+            Token::True => Value::Boolean(true),
+            Token::False => Value::Boolean(false),
+            Token::Null => Value::Null,
             _ => {
                 self.advance_token();
                 match self.parse() {
@@ -186,7 +189,7 @@ mod tests {
     }
 
     #[test]
-    fn parse_object_number() {
+    fn parse_object_composite() {
         let mut tokens = vec![
             Token::LeftBrace,
             Token::String("x".to_string()),
@@ -220,6 +223,45 @@ mod tests {
         .into_iter();
 
         let want = hash![("x".to_string(), Value::String("y".to_string()))];
+        let got = Parser::new(&mut tokens).parse();
+
+        assert_object(want, got)
+    }
+    #[test]
+    fn parse_object_boolean() {
+        let mut tokens = vec![
+            Token::LeftBrace,
+            Token::String("x".to_string()),
+            Token::Colon,
+            Token::True,
+            Token::Comma,
+            Token::String("y".to_string()),
+            Token::Colon,
+            Token::False,
+            Token::RightBrace,
+        ]
+        .into_iter();
+
+        let want = hash![
+            ("x".to_string(), Value::Boolean(true)),
+            ("y".to_string(), Value::Boolean(false))
+        ];
+        let got = Parser::new(&mut tokens).parse();
+
+        assert_object(want, got)
+    }
+    #[test]
+    fn parse_object_null() {
+        let mut tokens = vec![
+            Token::LeftBrace,
+            Token::String("null".to_string()),
+            Token::Colon,
+            Token::Null,
+            Token::RightBrace,
+        ]
+        .into_iter();
+
+        let want = hash![("null".to_string(), Value::Null)];
         let got = Parser::new(&mut tokens).parse();
 
         assert_object(want, got)

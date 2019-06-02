@@ -3,6 +3,10 @@ pub enum Token {
     Illegal(usize),
     Eof,
 
+    True,
+    False,
+    Null,
+
     Number(f64),
     String(String),
 

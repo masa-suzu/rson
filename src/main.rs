@@ -52,7 +52,10 @@ mod tests {
             "x": {
                 "y":3.14
             },
-            "はろー" : "json"
+            "はろー" : "json",
+            "dev" : true,
+            "support_array" : false,
+            "version" : null
         }
         "##
         .to_string();
@@ -62,7 +65,10 @@ mod tests {
                 "x".to_string(),
                 Value::Object(hash![("y".to_string(), Value::Number(3.14))])
             ),
-            ("はろー".to_string(), Value::String("json".to_string()))
+            ("はろー".to_string(), Value::String("json".to_string())),
+            ("dev".to_string(), Value::Boolean(true)),
+            ("support_array".to_string(), Value::Boolean(false)),
+            ("version".to_string(), Value::Null)
         ];
 
         let mut tokens = Lexer::new(&input).into_iter();

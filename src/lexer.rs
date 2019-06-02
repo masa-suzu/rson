@@ -37,7 +37,13 @@ impl<'a> Lexer<'a> {
             b']' => Token::RightBracket,
 
             0 => Token::Eof,
-            _ => self.found_illegal(),
+            ch => {
+                if ch.is_ascii_alphabetic() {
+                    return self.consume_keyword();
+                } else {
+                    return self.found_illegal();
+                }
+            }
         };
 
         self.read_char();
@@ -89,6 +95,28 @@ impl<'a> Lexer<'a> {
             _ => &self.input[start_pos..self.pos - 1],
         };
         Token::String(consumed.to_string())
+    }
+
+    fn consume_keyword(&mut self) -> Token {
+        let start_pos = self.pos;
+
+        while self.ch.is_ascii_alphanumeric() {
+            self.read_char()
+        }
+
+        let consumed = match self.ch {
+            0 => &self.input[start_pos..self.pos + 1],
+            _ => &self.input[start_pos..self.pos],
+        };
+
+        self.debug();
+        println!("{}", consumed);
+        match &*consumed {
+            "true" => Token::True,
+            "false" => Token::False,
+            "null" => Token::Null,
+            _ => self.found_illegal(),
+        }
     }
 
     fn read_char(&mut self) {
@@ -156,6 +184,9 @@ mod tests {
     "number" : -1.0,
     "string" : "x",
     "array" : [ 1, 2, 3],
+    "true" : true,
+    "false" : false,
+    "null" : null
 }
 "##;
         let want = vec![
@@ -178,8 +209,28 @@ mod tests {
             Token::Number(3.0),
             Token::RightBracket,
             Token::Comma,
+            Token::String("true".to_string()),
+            Token::Colon,
+            Token::True,
+            Token::Comma,
+            Token::String("false".to_string()),
+            Token::Colon,
+            Token::False,
+            Token::Comma,
+            Token::String("null".to_string()),
+            Token::Colon,
+            Token::Null,
             Token::RightBrace,
         ];
+
+        let got: Vec<Token> = Lexer::new(input).map(|x| x).collect();
+        assert_eq!(want, got);
+    }
+
+    #[test]
+    fn next_token_keywords() {
+        let input = "true false null";
+        let want = vec![Token::True, Token::False, Token::Null];
 
         let got: Vec<Token> = Lexer::new(input).map(|x| x).collect();
         assert_eq!(want, got);
@@ -190,7 +241,7 @@ mod tests {
         let input = "123 x 123";
         let want = vec![
             Token::Number(123.0),
-            Token::Illegal(4),
+            Token::Illegal(5),
             Token::Number(123.0),
         ];
 
