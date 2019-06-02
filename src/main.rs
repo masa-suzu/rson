@@ -54,7 +54,8 @@ mod tests {
             },
             "はろー" : null,
             "dev": true,
-            "escape_support" : false
+            "escape_support" : false,
+            "keywords": ["json","parser","rust"]
         }
         "##
         .to_string();
@@ -69,7 +70,18 @@ mod tests {
             ),
             ("はろー".to_string(), Value::Null),
             ("dev".to_string(), Value::Boolean(true)),
-            ("escape_support".to_string(), Value::Boolean(false))
+            ("escape_support".to_string(), Value::Boolean(false)),
+            (
+                "keywords".to_string(),
+                Value::Array(
+                    [
+                        Value::String("json".to_string()),
+                        Value::String("parser".to_string()),
+                        Value::String("rust".to_string())
+                    ]
+                    .to_vec()
+                )
+            )
         ];
 
         let mut tokens = Lexer::new(&input).into_iter();
