@@ -1,3 +1,3 @@
 # RSON
 
-RSON is a minimal JSON parser by Rust.
+RSON is a minimal JSON parser in Rust.
