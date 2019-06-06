@@ -1,0 +1,12 @@
+.editor {
+    vertical-align: middle;
+    height: 600px;
+}
+.left{
+    float: left;
+    width: 50%;
+}
+.right{
+    float: right;
+    width: 50%;
+}
