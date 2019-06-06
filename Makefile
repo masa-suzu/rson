@@ -7,8 +7,3 @@ test:
 
 run: test
 	cargo run
-
-build:
-	cargo +nightly build --target wasm32-unknown-unknown --release
-	mkdir -p docs
-	wasm-bindgen ./target/wasm32-unknown-unknown/release/rson.wasm --out-dir docs --nodejs

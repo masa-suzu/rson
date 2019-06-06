@@ -1,10 +1,6 @@
 use crate::lexer::Lexer;
 use crate::parser::Parser;
 
-extern crate wasm_bindgen;
-use wasm_bindgen::prelude::*;
-
-#[wasm_bindgen]
 pub fn run(s: String) {
     let mut tokens = Lexer::new(&s).into_iter();
     match Parser::new(&mut tokens).parse() {
