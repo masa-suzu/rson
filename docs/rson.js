@@ -30,3 +30,15 @@ module.exports.run = function(s) {
 
 wasm = require('./rson_bg');
 
+var editor1 = ace.edit("editor1");
+var editor2 = ace.edit("editor2");
+editor2.$blockScrolling = Infinity;
+editor2.setReadOnly(true);
+editor1.session.on('change', function(delta) {
+    var v = editor1.getValue();
+    editor2.setValue(run(v));
+});
+editor2.session.on('change', function(delta) {
+    console.log(delta);
+});
+

@@ -9,20 +9,6 @@
   <div class="editor left" id="editor1"></div>
   <div class="editor left" id="editor2"></div>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.2.0/ace.js"></script>
-  <script type="module">
-    import run from './rson.js';
-
-    var editor1 = ace.edit("editor1");
-    var editor2 = ace.edit("editor2");
-    editor2.$blockScrolling = Infinity;
-    editor2.setReadOnly(true);
-    editor1.session.on('change', function(delta) {
-        var v = editor1.getValue();
-        editor2.setValue(run(v));
-    });
-    editor2.session.on('change', function(delta) {
-        console.log(delta);
-    });
-  </script>
+  <script src="rson.js" type="module"></script>   
 </body>
 </html>
