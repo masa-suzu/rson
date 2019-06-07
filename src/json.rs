@@ -7,7 +7,7 @@ use std::fmt::Formatter;
 pub type Object = HashMap<String, Value>;
 pub type Array = Vec<Value>;
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, PartialEq)]
 pub enum Root {
     Object(Object),
     Array(Array),
@@ -21,6 +21,24 @@ pub enum Value {
     Null,
     String(String),
     Number(f64),
+}
+
+impl Display for Root {
+    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
+        match self {
+            Root::Object(o) => write!(f, "{:?}", o),
+            Root::Array(a) => write!(f, "{:?}", a),
+        }
+    }
+}
+
+impl fmt::Debug for Root {
+    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
+        match self {
+            Root::Object(o) => write!(f, "Object({:?})", o),
+            Root::Array(a) => write!(f, "Array({:?})", a),
+        }
+    }
 }
 
 impl Display for Value {

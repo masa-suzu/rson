@@ -18,6 +18,7 @@ pub enum Error {
     FoundIllegalToken(usize),
     FoundUnExpectedToken(Token, Token),
     FoundUnTerminatedBrace,
+    FoundUnTerminatedBracket,
     FailedParseValue(Token),
 }
 
@@ -29,6 +30,7 @@ impl Display for Error {
                 write!(f, "Found Token {:?}, want Token {:?}", got, want)
             }
             Error::FoundUnTerminatedBrace => write!(f, "Not terminated brace."),
+            Error::FoundUnTerminatedBracket => write!(f, "Not terminated bracket."),
             Error::FailedParseValue(t) => write!(f, "Failed to parse value from Token {:?}.", t),
         }
     }
@@ -49,6 +51,7 @@ impl<'a> Parser<'a> {
     }
 
     pub fn parse(&mut self) -> Result<Root, Error> {
+        self.debug();
         match self.current_token.to_owned() {
             Token::LeftBrace => match self.parse_object() {
                 Ok(v) => match v {
@@ -70,7 +73,9 @@ impl<'a> Parser<'a> {
 
     fn parse_object(&mut self) -> Result<Value, Error> {
         let mut kvs: HashMap<String, Value> = HashMap::new();
-
+        if self.next_token == Token::RightBrace {
+            return Ok(Value::Object(kvs));
+        }
         loop {
             match self.parse_key_value_pair() {
                 Ok((k, v)) => {
@@ -94,7 +99,9 @@ impl<'a> Parser<'a> {
 
     fn parse_array(&mut self) -> Result<Value, Error> {
         let mut array: Vec<Value> = Vec::new();
-
+        if self.next_token == Token::RightBracket {
+            return Ok(Value::Array(array));
+        }
         loop {
             match self.parse_value() {
                 Ok(v) => {
@@ -107,7 +114,7 @@ impl<'a> Parser<'a> {
                 Token::RightBracket => {
                     return Ok(Value::Array(array));
                 }
-                Token::Eof => return Err(Error::FoundUnTerminatedBrace),
+                Token::Eof => return Err(Error::FoundUnTerminatedBracket),
                 Token::Comma => {
                     self.advance_token();
                 }
@@ -353,6 +360,45 @@ mod tests {
         .into_iter();
 
         let want = vec![Value::String("x".to_string()), Value::Boolean(true)];
+        let got = Parser::new(&mut tokens).parse();
+
+        assert_root(Root::Array(want), got)
+    }
+
+    #[test]
+    fn parse_empty_object() {
+        let mut tokens = vec![Token::LeftBrace, Token::RightBrace].into_iter();
+
+        let want = hash![];
+        let got = Parser::new(&mut tokens).parse();
+
+        assert_root(Root::Object(want), got)
+    }
+
+    #[test]
+    fn parse_empty_array() {
+        let mut tokens = vec![Token::LeftBracket, Token::RightBracket].into_iter();
+
+        let want = vec![];
+        let got = Parser::new(&mut tokens).parse();
+
+        assert_root(Root::Array(want), got)
+    }
+
+    #[test]
+    fn parse_empty_values() {
+        let mut tokens = vec![
+            Token::LeftBracket,
+            Token::LeftBrace,
+            Token::RightBrace,
+            Token::Comma,
+            Token::LeftBracket,
+            Token::RightBracket,
+            Token::RightBracket,
+        ]
+        .into_iter();
+
+        let want = vec![Value::Object(hash!()), Value::Array(vec![])];
         let got = Parser::new(&mut tokens).parse();
 
         assert_root(Root::Array(want), got)
