@@ -7,14 +7,20 @@ use std::fmt::Formatter;
 pub type Object = HashMap<String, Value>;
 pub type Array = Vec<Value>;
 
+#[derive(Clone, Debug, PartialEq)]
+pub enum Root {
+    Object(Object),
+    Array(Array),
+}
+
 #[derive(Clone, PartialEq)]
 pub enum Value {
     Object(Object),
+    Array(Array),
     Boolean(bool),
     Null,
     String(String),
     Number(f64),
-    Array(Array),
 }
 
 impl Display for Value {

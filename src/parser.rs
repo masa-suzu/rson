@@ -1,7 +1,7 @@
 use crate::json::Value;
 use crate::token::Token;
 
-use crate::json::Object;
+use crate::json::Root;
 use std::collections::HashMap;
 use std::fmt;
 use std::fmt::Display;
@@ -48,12 +48,19 @@ impl<'a> Parser<'a> {
         parser
     }
 
-    pub fn parse(&mut self) -> Result<Object, Error> {
+    pub fn parse(&mut self) -> Result<Root, Error> {
         match self.current_token.to_owned() {
             Token::LeftBrace => match self.parse_object() {
                 Ok(v) => match v {
-                    Value::Object(o) => Ok(o),
+                    Value::Object(o) => Ok(Root::Object(o)),
                     _ => panic!("parse_object must return Ok(Value::Object) or Err(Error)"),
+                },
+                Err(e) => return Err(e),
+            },
+            Token::LeftBracket => match self.parse_array() {
+                Ok(v) => match v {
+                    Value::Array(o) => Ok(Root::Array(o)),
+                    _ => panic!("parse_array must return Ok(Value::Array) or Err(Error)"),
                 },
                 Err(e) => return Err(e),
             },
@@ -145,14 +152,11 @@ impl<'a> Parser<'a> {
             Token::True => Value::Boolean(true),
             Token::False => Value::Boolean(false),
             Token::Null => Value::Null,
-            Token::LeftBracket => {
-                self.advance_token();
-                self.parse_array()?
-            }
             _ => {
                 self.advance_token();
                 match self.parse() {
-                    Ok(o) => Value::Object(o),
+                    Ok(Root::Object(o)) => Value::Object(o),
+                    Ok(Root::Array(o)) => Value::Array(o),
                     Err(e) => return Err(e),
                 }
             }
@@ -186,6 +190,7 @@ impl<'a> Parser<'a> {
 #[cfg(test)]
 mod tests {
     use crate::json::Object;
+    use crate::json::Root;
     use crate::json::Value;
     use crate::parser::Error;
     use crate::parser::Parser;
@@ -225,7 +230,7 @@ mod tests {
         )];
         let got = Parser::new(&mut tokens).parse();
 
-        assert_object(want, got)
+        assert_root(Root::Object(want), got)
     }
     #[test]
     fn parse_object_string() {
@@ -241,7 +246,7 @@ mod tests {
         let want = hash![("x".to_string(), Value::String("y".to_string()))];
         let got = Parser::new(&mut tokens).parse();
 
-        assert_object(want, got)
+        assert_root(Root::Object(want), got)
     }
     #[test]
     fn parse_object_boolean() {
@@ -264,7 +269,7 @@ mod tests {
         ];
         let got = Parser::new(&mut tokens).parse();
 
-        assert_object(want, got)
+        assert_root(Root::Object(want), got)
     }
     #[test]
     fn parse_object_null() {
@@ -280,7 +285,7 @@ mod tests {
         let want = hash![("null".to_string(), Value::Null)];
         let got = Parser::new(&mut tokens).parse();
 
-        assert_object(want, got)
+        assert_root(Root::Object(want), got)
     }
     #[test]
     fn parse_object_multiple() {
@@ -303,7 +308,7 @@ mod tests {
         ];
         let got = Parser::new(&mut tokens).parse();
 
-        assert_object(want, got)
+        assert_root(Root::Object(want), got)
     }
 
     #[test]
@@ -333,12 +338,29 @@ mod tests {
         )];
         let got = Parser::new(&mut tokens).parse();
 
-        assert_object(want, got)
+        assert_root(Root::Object(want), got)
     }
 
-    fn assert_object(want: Object, got: Result<Object, Error>) {
+    #[test]
+    fn parse_root_array() {
+        let mut tokens = vec![
+            Token::LeftBracket,
+            Token::String("x".to_string()),
+            Token::Comma,
+            Token::True,
+            Token::RightBracket,
+        ]
+        .into_iter();
+
+        let want = vec![Value::String("x".to_string()), Value::Boolean(true)];
+        let got = Parser::new(&mut tokens).parse();
+
+        assert_root(Root::Array(want), got)
+    }
+
+    fn assert_root(want: Root, got: Result<Root, Error>) {
         match got {
-            Ok(j) => assert_eq!(want, j),
+            Ok(x) => assert_eq!(want, x),
             Err(e) => {
                 println!("{:?}", e);
                 assert!(false, "Want Object, got Error {}", e)

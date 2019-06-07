@@ -1,11 +1,15 @@
+use crate::json::Root;
 use crate::lexer::Lexer;
 use crate::parser::Parser;
 
 pub fn run(s: String) {
     let mut tokens = Lexer::new(&s).into_iter();
     match Parser::new(&mut tokens).parse() {
-        Ok(j) => {
-            println!("{:?}", j);
+        Ok(Root::Object(o)) => {
+            println!("{:?}", o);
+        }
+        Ok(Root::Array(a)) => {
+            println!("{:?}", a);
         }
         Err(e) => println!("{}", e),
     }
@@ -14,6 +18,7 @@ pub fn run(s: String) {
 #[cfg(test)]
 mod tests {
     use crate::json::Object;
+    use crate::json::Root;
     use crate::json::Value;
     use crate::lexer::Lexer;
     use crate::parser::Error;
@@ -77,9 +82,10 @@ mod tests {
         assert_object(want, got)
     }
 
-    fn assert_object(want: Object, got: Result<Object, Error>) {
+    fn assert_object(want: Object, got: Result<Root, Error>) {
         match got {
-            Ok(j) => assert_eq!(want, j),
+            Ok(Root::Object(o)) => assert_eq!(want, o),
+            Ok(Root::Array(a)) => unimplemented!(),
             Err(e) => {
                 println!("{:?}", e);
                 assert!(false, "Want Object, got Error {}", e)
