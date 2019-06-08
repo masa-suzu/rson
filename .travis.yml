@@ -36,6 +36,7 @@ script:
       rustup component add rustfmt
       cargo clippy
       cargo fmt -- --check
-  
+  - cargo build --verbose --all
+  - cargo test --verbose --all
 # Caches $HOME/.cargo and $TRAVIS_BUILD_DIR/target.
 cache: cargo
