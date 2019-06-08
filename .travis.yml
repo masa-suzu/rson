@@ -7,6 +7,8 @@ env:
 
 matrix:
   include:
+    - os: windows
+      env: TARGET=x86_64-pc-windows-msvc LINT=true
     - os: osx
       env: TARGET=x86_64-apple-darwin LINT=false
     - os: linux
