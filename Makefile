@@ -1,9 +1,10 @@
 .PHONY: test
 test:
-	cargo fmt
-	cargo check
-	cargo test
-	cargo test --release
+	cargo clippy
+	cargo fmt -- --check
+	cargo build --verbose --all
+	cargo test --verbose --all
+	cargo test --verbose --all --release
 
 run: test
 	cargo run

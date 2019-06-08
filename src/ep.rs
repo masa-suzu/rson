@@ -3,7 +3,7 @@ use crate::lexer::Lexer;
 use crate::parser::Parser;
 
 pub fn run(s: String) {
-    let mut tokens = Lexer::new(&s).into_iter();
+    let mut tokens = Lexer::new(&s);
     match Parser::new(&mut tokens).parse() {
         Ok(Root::Object(o)) => {
             println!("{:?}", o);
@@ -85,7 +85,7 @@ mod tests {
     fn assert_object(want: Object, got: Result<Root, Error>) {
         match got {
             Ok(Root::Object(o)) => assert_eq!(want, o),
-            Ok(Root::Array(a)) => unimplemented!(),
+            Ok(Root::Array(_)) => unimplemented!(),
             Err(e) => {
                 println!("{:?}", e);
                 assert!(false, "Want Object, got Error {}", e)
