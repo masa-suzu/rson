@@ -1,5 +1,6 @@
-.PHONY: test
-test:
+.PHONY: test run clean
+
+test: clean
 	cargo clippy
 	cargo fmt -- --check
 	cargo build --verbose --all
@@ -8,3 +9,5 @@ test:
 
 run: test
 	cargo run
+clean:
+	cargo clean

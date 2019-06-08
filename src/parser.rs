@@ -368,7 +368,7 @@ mod tests {
     fn parse_empty_object() {
         let mut tokens = vec![Token::LeftBrace, Token::RightBrace].into_iter();
 
-        let want = hash![];
+        let want = HashMap::new();
         let got = Parser::new(&mut tokens).parse();
 
         assert_root(Root::Object(want), got)
@@ -378,7 +378,7 @@ mod tests {
     fn parse_empty_array() {
         let mut tokens = vec![Token::LeftBracket, Token::RightBracket].into_iter();
 
-        let want = vec![];
+        let want = Vec::new();
         let got = Parser::new(&mut tokens).parse();
 
         assert_root(Root::Array(want), got)
@@ -397,7 +397,7 @@ mod tests {
         ]
         .into_iter();
 
-        let want = vec![Value::Object(hash!()), Value::Array(vec![])];
+        let want = vec![Value::Object(HashMap::new()), Value::Array(Vec::new())];
         let got = Parser::new(&mut tokens).parse();
 
         assert_root(Root::Array(want), got)
