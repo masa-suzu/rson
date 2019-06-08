@@ -10,14 +10,7 @@ matrix:
     - os: windows
       env: TARGET=x86_64-pc-windows-msvc LINT=true
     - os: osx
-      env: TARGET=x86_64-apple-darwin LINT=false
-    - os: linux
-      env: TARGET=x86_64-unknown-linux-gnu LINT=false
-      addons:
-        apt:
-          packages:
-            - libssl-dev
-          update: true
+      env: TARGET=x86_64-apple-darwin LINT=true
     - os: linux
       env: TARGET=x86_64-unknown-linux-gnu LINT=true
 
@@ -38,5 +31,7 @@ script:
       cargo fmt -- --check
   - cargo build --verbose --all
   - cargo test --verbose --all
+  - cargo test --verbose --all --release
+  
 # Caches $HOME/.cargo and $TRAVIS_BUILD_DIR/target.
 cache: cargo
