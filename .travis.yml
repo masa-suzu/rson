@@ -1,0 +1,37 @@
+language: rust
+rust: stable
+
+env:
+  global:
+    - RUST_BACKTRACE: full
+
+matrix:
+  include:
+    - os: windows
+      env: TARGET=x86_64-pc-windows-msvc LINT=true
+    - os: osx
+      env: TARGET=x86_64-apple-darwin LINT=true
+    - os: linux
+      env: TARGET=x86_64-unknown-linux-gnu LINT=true
+
+before_script:
+  - rustc -V
+  - cargo -V
+  - git --version
+  - echo $TRAVIS_BRANCH
+  - git rev-parse HEAD
+
+script:
+  - export PKPKG_CONFIG_ALLOW_CROSSG_CONFIG_ALLOW_CROSS=1
+  - cargo build --target $TARGET && file target/${TARGET}/debug/rson
+  - |
+      rustup component add clippy
+      rustup component add rustfmt
+      cargo clippy
+      cargo fmt -- --check
+  - cargo build --verbose --all
+  - cargo test --verbose --all
+  - cargo test --verbose --all --release
+  
+# Caches $HOME/.cargo and $TRAVIS_BUILD_DIR/target.
+cache: cargo

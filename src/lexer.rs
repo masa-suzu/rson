@@ -18,7 +18,7 @@ impl<'a> Lexer<'a> {
 
         lexer.read_char();
 
-        return lexer;
+        lexer
     }
 
     fn next_token(&mut self) -> Token {
@@ -50,7 +50,7 @@ impl<'a> Lexer<'a> {
 
         self.read_char();
 
-        return token;
+        token
     }
 
     fn consume_number(&mut self) -> Token {
@@ -67,7 +67,7 @@ impl<'a> Lexer<'a> {
         }
 
         let consumed = match self.ch {
-            0 => &self.input[start_pos..self.pos + 1],
+            0 => &self.input[start_pos..=self.pos],
             _ => &self.input[start_pos..self.pos],
         };
 
@@ -107,7 +107,7 @@ impl<'a> Lexer<'a> {
         }
 
         let consumed = match self.ch {
-            0 => &self.input[start_pos..self.pos + 1],
+            0 => &self.input[start_pos..=self.pos],
             _ => &self.input[start_pos..self.pos],
         };
 
@@ -150,7 +150,7 @@ impl<'a> Lexer<'a> {
         }
         print!("{}", self.input);
 
-        if !self.input.ends_with("\n") {
+        if !self.input.ends_with('\n') {
             println!()
         }
 

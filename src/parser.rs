@@ -58,14 +58,14 @@ impl<'a> Parser<'a> {
                     Value::Object(o) => Ok(Root::Object(o)),
                     _ => panic!("parse_object must return Ok(Value::Object) or Err(Error)"),
                 },
-                Err(e) => return Err(e),
+                Err(e) => Err(e),
             },
             Token::LeftBracket => match self.parse_array() {
                 Ok(v) => match v {
                     Value::Array(o) => Ok(Root::Array(o)),
                     _ => panic!("parse_array must return Ok(Value::Array) or Err(Error)"),
                 },
-                Err(e) => return Err(e),
+                Err(e) => Err(e),
             },
             t => Err(Error::FoundUnExpectedToken(Token::LeftBrace, t)),
         }
@@ -196,7 +196,6 @@ impl<'a> Parser<'a> {
 
 #[cfg(test)]
 mod tests {
-    use crate::json::Object;
     use crate::json::Root;
     use crate::json::Value;
     use crate::parser::Error;
@@ -369,7 +368,7 @@ mod tests {
     fn parse_empty_object() {
         let mut tokens = vec![Token::LeftBrace, Token::RightBrace].into_iter();
 
-        let want = hash![];
+        let want = HashMap::new();
         let got = Parser::new(&mut tokens).parse();
 
         assert_root(Root::Object(want), got)
@@ -379,7 +378,7 @@ mod tests {
     fn parse_empty_array() {
         let mut tokens = vec![Token::LeftBracket, Token::RightBracket].into_iter();
 
-        let want = vec![];
+        let want = Vec::new();
         let got = Parser::new(&mut tokens).parse();
 
         assert_root(Root::Array(want), got)
@@ -398,7 +397,7 @@ mod tests {
         ]
         .into_iter();
 
-        let want = vec![Value::Object(hash!()), Value::Array(vec![])];
+        let want = vec![Value::Object(HashMap::new()), Value::Array(Vec::new())];
         let got = Parser::new(&mut tokens).parse();
 
         assert_root(Root::Array(want), got)
