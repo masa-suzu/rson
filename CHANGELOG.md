@@ -1,12 +1,14 @@
 ## Unreleased
 
-- escape
-- exponential notation
 - format
 
 ## v0.1.0
 
 ### FEATURES
+
+- Root
+  - Object
+  - Array
 
 - Value
   - Object

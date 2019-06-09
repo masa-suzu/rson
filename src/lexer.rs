@@ -59,12 +59,20 @@ impl<'a> Lexer<'a> {
         if self.ch == b'-' {
             self.read_char();
         }
-        loop {
-            match self.ch {
-                b'0'...b'9' => self.read_char(),
-                b'.' => self.read_char(),
-                _ => break,
+
+        self.read_digit();
+        if let b'.' = self.ch {
+            self.read_char();
+            self.read_digit();
+        }
+
+        match self.ch {
+            b'e' | b'E' => {
+                self.read_char();
+                self.read_char(); // may contains -
+                self.read_digit();
             }
+            _ => {}
         }
 
         let consumed = match self.ch {
@@ -72,6 +80,7 @@ impl<'a> Lexer<'a> {
             _ => &self.input[start_pos..self.pos],
         };
 
+        println!("{}", consumed);
         match consumed.parse::<f64>().ok() {
             Some(n) => Token::Number(n),
             None => self.found_illegal(),
@@ -137,6 +146,12 @@ impl<'a> Lexer<'a> {
         self.ch = self.input.as_bytes()[self.next_pos];
         self.pos = self.next_pos;
         self.next_pos += 1;
+    }
+
+    fn read_digit(&mut self) {
+        while self.ch.is_ascii_digit() {
+            self.read_char();
+        }
     }
 
     fn skip_whitespace(&mut self) {
@@ -272,6 +287,20 @@ mod tests {
         let want = vec![Token::String(
             " \\\" \\\\ \\\" \\/ \\b \\f \\n \\r \\t ".to_string(),
         )];
+
+        let got: Vec<Token> = Lexer::new(input).map(|x| x).collect();
+        assert_eq!(want, got);
+    }
+
+    #[test]
+    fn next_token_number_with_e() {
+        let input = "3.14e10 1.0e-2 2.3E2 -4E-3";
+        let want = vec![
+            Token::Number(31400000000.0),
+            Token::Number(0.01),
+            Token::Number(230.0),
+            Token::Number(-0.004),
+        ];
 
         let got: Vec<Token> = Lexer::new(input).map(|x| x).collect();
         assert_eq!(want, got);
