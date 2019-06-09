@@ -38,6 +38,7 @@ impl<'a> Lexer<'a> {
             b'[' => Token::LeftBracket,
             b']' => Token::RightBracket,
 
+            b'\\' => self.found_illegal(),
             0 => Token::Eof,
             ch => {
                 if ch.is_ascii_alphabetic() {
@@ -86,6 +87,14 @@ impl<'a> Lexer<'a> {
                 b'\"' => {
                     self.read_char();
                     break;
+                }
+                b'\\' => {
+                    self.read_char();
+                    match self.ch {
+                        b'\"' => {}
+                        b'\\' | b'/' | b'b' | b'f' | b'n' | b'r' | b't' => {}
+                        _ => return self.found_illegal(),
+                    }
                 }
                 0 => return Token::Illegal(self.pos),
                 _ => {}
@@ -183,19 +192,20 @@ mod tests {
     fn next_token() {
         let input = r##"
 {
-    "number" : -1.0,
+    "number" : -1.1,
     "string" : "x",
-    "array" : [ 1, 2, 3],
+    "array" : [ 1.0, 2.0, 3.1],
     "true" : true,
     "false" : false,
-    "null" : null
+    "null" : null,
+    "escape_sequence" : "\\\/\b\f\n\r\t"
 }
 "##;
         let want = vec![
             Token::LeftBrace,
             Token::String("number".to_string()),
             Token::Colon,
-            Token::Number(-1.0),
+            Token::Number(-1.1),
             Token::Comma,
             Token::String("string".to_string()),
             Token::Colon,
@@ -208,7 +218,7 @@ mod tests {
             Token::Comma,
             Token::Number(2.0),
             Token::Comma,
-            Token::Number(3.0),
+            Token::Number(3.1),
             Token::RightBracket,
             Token::Comma,
             Token::String("true".to_string()),
@@ -222,6 +232,10 @@ mod tests {
             Token::String("null".to_string()),
             Token::Colon,
             Token::Null,
+            Token::Comma,
+            Token::String("escape_sequence".to_string()),
+            Token::Colon,
+            Token::String("\\\\\\/\\b\\f\\n\\r\\t".to_string()),
             Token::RightBrace,
         ];
 
@@ -240,16 +254,29 @@ mod tests {
 
     #[test]
     fn next_token_with_illegal() {
-        let input = "123 x 123";
+        let input = "\\123 x 123";
         let want = vec![
+            Token::Illegal(0),
             Token::Number(123.0),
-            Token::Illegal(5),
+            Token::Illegal(6),
             Token::Number(123.0),
         ];
 
         let got: Vec<Token> = Lexer::new(input).map(|x| x).collect();
         assert_eq!(want, got);
     }
+
+    #[test]
+    fn next_token_with_escape_sequence() {
+        let input = "\" \\\" \\\\ \\\" \\/ \\b \\f \\n \\r \\t \"";
+        let want = vec![Token::String(
+            " \\\" \\\\ \\\" \\/ \\b \\f \\n \\r \\t ".to_string(),
+        )];
+
+        let got: Vec<Token> = Lexer::new(input).map(|x| x).collect();
+        assert_eq!(want, got);
+    }
+
     #[test]
     fn next_token_string_not_terminated() {
         let input = "1\"xxx";
