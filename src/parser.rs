@@ -397,7 +397,7 @@ mod tests {
         ]
         .into_iter();
 
-        let want = vec![Value::Object(HashMap::new()), Value::Array(Vec::new())];
+        let want = vec![json!({}), json!([])];
         let got = Parser::new(&mut tokens).parse();
 
         assert_root(Root::Array(want), got)
