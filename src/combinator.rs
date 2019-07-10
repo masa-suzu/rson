@@ -1,8 +1,10 @@
+use std::collections::HashMap;
+
 extern crate nom;
 use nom::{
     branch::alt,
     bytes::complete::{tag, take_until},
-    character::complete::digit1,
+    character::complete::{digit1, multispace0},
     multi::{many1, separated_list},
     sequence::delimited,
     IResult,
@@ -11,7 +13,13 @@ use nom::{
 use crate::json::Value;
 
 pub fn parse_value(s: &str) -> IResult<&str, Value> {
-    alt((parse_boolean, parse_number, parse_string, parse_array))(s)
+    alt((
+        parse_boolean,
+        parse_number,
+        parse_string,
+        parse_array,
+        parse_object,
+    ))(s)
 }
 
 fn parse_boolean(s: &str) -> IResult<&str, Value> {
@@ -37,12 +45,19 @@ fn parse_string(s: &str) -> IResult<&str, Value> {
 }
 
 fn parse_array(s: &str) -> IResult<&str, Value> {
+    let (s, _) = multispace0(s)?;
+
     let (s, _) = tag("(")(s)?;
+
+    let (s, _) = multispace0(s)?;
 
     let (s, v) = match separated_list(tag(","), parse_value)(s) {
         Ok((s, x)) => (s, Some(x)),
         _ => (s, None),
     };
+
+    let (s, _) = multispace0(s)?;
+
     let (s, _) = tag(")")(s)?;
 
     match v {
@@ -51,11 +66,68 @@ fn parse_array(s: &str) -> IResult<&str, Value> {
     }
 }
 
+fn parse_kvp(s: &str) -> IResult<&str, (String, Value)> {
+    let (s, _) = multispace0(s)?;
+
+    let (s, k) = parse_string(s)?;
+
+    let (s, _) = multispace0(s)?;
+    let (s, _) = tag(":")(s)?;
+
+    let (s, _) = multispace0(s)?;
+    let (s, v) = parse_value(s)?;
+
+    match k {
+        Value::String(k) => Ok((s, (k, v))),
+        _ => unreachable!(),
+    }
+}
+
+fn parse_object(s: &str) -> IResult<&str, Value> {
+    let (s, _) = multispace0(s)?;
+
+    let (s, _) = tag("{")(s)?;
+
+    let (s, _) = multispace0(s)?;
+
+    let (s, kvs) = match separated_list(tag(","), parse_kvp)(s) {
+        Ok((s, x)) => (s, Some(x)),
+        _ => (s, None),
+    };
+
+    let (s, _) = multispace0(s)?;
+
+    let (s, _) = tag("}")(s)?;
+
+    let mut map = HashMap::new();
+    if let Some(x) = kvs {
+        for (k, v) in x {
+            map.insert(k, v);
+        }
+    }
+    Ok((s, Value::Object(map)))
+}
+
 #[cfg(test)]
 mod tests {
+    use std::collections::HashMap;
+
     use crate::combinator::parse_value;
-    use crate::json::Value::{Array, Boolean, Number, String};
+    use crate::json::Value::{Array, Boolean, Number, Object, String};
     use nom::{error::ErrorKind, Err};
+
+    macro_rules! hash {
+        ( $( $t:expr),* ) => {
+            {
+                let mut temp_hash = HashMap::new();
+                $(
+                    temp_hash.insert($t.0, $t.1);
+                )*
+                temp_hash
+            }
+        };
+    }
+
     #[test]
     fn boolean() {
         assert_eq!(parse_value("true"), Ok(("", Boolean(true))));
@@ -93,6 +165,43 @@ mod tests {
         assert_eq!(
             parse_value("(true,false)"),
             Ok(("", Array(vec![Boolean(true), Boolean(false)])))
+        );
+        assert_eq!(parse_value(" (true)"), Ok(("", Array(vec![Boolean(true)]))));
+        assert_eq!(parse_value("( true)"), Ok(("", Array(vec![Boolean(true)]))));
+        assert_eq!(parse_value("(true )"), Ok(("", Array(vec![Boolean(true)]))));
+        assert_eq!(
+            parse_value("(true) "),
+            Ok((" ", Array(vec![Boolean(true)])))
+        );
+    }
+    #[test]
+    fn object() {
+        assert_eq!(
+            parse_value("{\"x\":\"y\"}"),
+            Ok((
+                "",
+                Object(hash![("x".to_string(), String("y".to_string()))])
+            ))
+        );
+        assert_eq!(
+            parse_value("{\"x\":\"y\",\"z\":\"w\"}"),
+            Ok((
+                "",
+                Object(hash![
+                    ("x".to_string(), String("y".to_string())),
+                    ("z".to_string(), String("w".to_string()))
+                ])
+            ))
+        );
+        assert_eq!(
+            parse_value("{\"a\":{\"b\":\"c\"}}"),
+            Ok((
+                "",
+                Object(hash![(
+                    "a".to_string(),
+                    Object(hash![("b".to_string(), String("c".to_string()))])
+                )])
+            ))
         );
     }
 }
