@@ -3,7 +3,7 @@
 test: clean
 	cargo fmt
 	cargo clippy
-	cargo test --verbose --all
+	cargo test
 
 run: test
 	cargo run
