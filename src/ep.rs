@@ -1,29 +1,26 @@
+use crate::combinator::parse;
 use crate::json::Root;
-use crate::lexer::Lexer;
-use crate::parser::Parser;
 
 pub fn run(s: String) {
-    let mut tokens = Lexer::new(&s);
-    match Parser::new(&mut tokens).parse() {
+    match parse(&s) {
         Ok(Root::Object(o)) => {
             println!("{:?}", o);
         }
         Ok(Root::Array(a)) => {
             println!("{:?}", a);
         }
-        Err(e) => println!("{}", e),
+        Err(e) => println!("{:?}", e),
     }
 }
 
 #[cfg(test)]
 mod tests {
+    use std::collections::HashMap;
+
+    use crate::combinator::{parse, Error};
     use crate::json::Object;
     use crate::json::Root;
     use crate::json::Value;
-    use crate::lexer::Lexer;
-    use crate::parser::Error;
-    use crate::parser::Parser;
-    use std::collections::HashMap;
 
     macro_rules! hash {
         ( $( $t:expr),* ) => {
@@ -76,8 +73,7 @@ mod tests {
             )
         ];
 
-        let mut tokens = Lexer::new(&input).into_iter();
-        let got = Parser::new(&mut tokens).parse();
+        let got = parse(&input);
 
         assert_object(want, got)
     }
@@ -85,10 +81,10 @@ mod tests {
     fn assert_object(want: Object, got: Result<Root, Error>) {
         match got {
             Ok(Root::Object(o)) => assert_eq!(want, o),
-            Ok(Root::Array(_)) => unimplemented!(),
+            Ok(Root::Array(a)) => unreachable!(),
             Err(e) => {
                 println!("{:?}", e);
-                assert!(false, "Want Object, got Error {}", e)
+                assert!(false, "Want Object, got Error {:?}", e)
             }
         }
     }

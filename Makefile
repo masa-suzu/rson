@@ -1,11 +1,9 @@
-.PHONY: test run clean
+.PHONY: test run
 
-test: clean
+test:
 	cargo fmt
 	cargo clippy
 	cargo test
 
 run: test
 	cargo run
-clean:
-	cargo clean
